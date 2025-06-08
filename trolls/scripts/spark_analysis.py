@@ -45,18 +45,12 @@ result_lang.show()
 
 result_lang.write.mode("overwrite").csv("data/trends/language_distribution.csv", header=True)
 
-# Estrarre hashtag validi: '#' seguito da uno o più caratteri alfanumerici.
-# regexp_extract_all ritorna un array di tutti i match, explode li trasforma in righe separate.
-# Il gruppo 0 di '(#\\w+)' cattura l'intero hashtag (es. '#topic').
-# Nota: in una stringa Python dentro una query SQL, \w diventa \\w.
 result_hashtags_df = spark.sql("""
 SELECT explode(regexp_extract_all(lower(content), '(#\\\\w+)', 0)) AS word
 FROM tweets
 WHERE content IS NOT NULL AND content RLIKE '#\\\\w+'
 """)
 
-# 'word' ora contiene hashtag validi.
-# Ordinamento secondario per 'word' per output consistenti in caso di conteggi uguali.
 top_hashtags = result_hashtags_df.groupBy("word").count().orderBy(col("count").desc(), col("word").asc()).limit(20)
 
 top_hashtags.show()
